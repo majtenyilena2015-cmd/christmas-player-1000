@@ -42,22 +42,7 @@ jobs:
       - name: Build Windows EXE
         shell: pwsh
         run: |
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name "Christmas Player 1000" \
-            --collect-all customtkinter \
-            --collect-all pygame \
-            --hidden-import math \
-            --hidden-import os \
-            --hidden-import random \
-            --hidden-import shutil \
-            --hidden-import tempfile \
-            --hidden-import tkinter \
-            --hidden-import tkinter.filedialog \
-            --hidden-import tkinter.messagebox \
-            --hidden-import wave \
-            --hidden-import array \
-            --hidden-import datetime \
-            --hidden-import pathlib \
-            --add-data "app_payload.bin;." launcher.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name "Christmas Player 1000" --collect-all customtkinter --collect-all pygame --hidden-import math --hidden-import os --hidden-import random --hidden-import shutil --hidden-import tempfile --hidden-import tkinter --hidden-import tkinter.filedialog --hidden-import tkinter.messagebox --hidden-import wave --hidden-import array --hidden-import datetime --hidden-import pathlib --add-data "app_payload.bin;." launcher.py
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
