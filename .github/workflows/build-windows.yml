@@ -33,6 +33,14 @@ jobs:
           $b64 = $p1 + $p2 + $p3
           [IO.File]::WriteAllBytes("app_payload.bin", [Convert]::FromBase64String($b64))
 
+      - name: Download legal Christmas recordings
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "bundled_music" | Out-Null
+          curl.exe -L "https://commons.wikimedia.org/wiki/Special:Redirect/file/JingleBells-Instrumental-.ogg" -o "bundled_music/JingleBells-Instrumental-.ogg"
+          curl.exe -L "https://commons.wikimedia.org/wiki/Special:Redirect/file/Deck_the_Halls_(USAFB_Concert_Band).ogg" -o "bundled_music/Deck_the_Halls_USAFB.ogg"
+          curl.exe -L "https://commons.wikimedia.org/wiki/Special:Redirect/file/Silent_Night_Librivox_2009.ogg" -o "bundled_music/Silent_Night_Librivox_2009.ogg"
+
       - name: Install build tools
         shell: pwsh
         run: |
@@ -42,7 +50,7 @@ jobs:
       - name: Build Windows EXE
         shell: pwsh
         run: |
-          python -m PyInstaller --noconfirm --clean --onefile --windowed --name "Christmas Player 1000" --collect-all customtkinter --collect-all pygame --hidden-import math --hidden-import os --hidden-import random --hidden-import shutil --hidden-import tempfile --hidden-import tkinter --hidden-import tkinter.filedialog --hidden-import tkinter.messagebox --hidden-import wave --hidden-import array --hidden-import datetime --hidden-import pathlib --add-data "app_payload.bin;." launcher.py
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name "Christmas Player 1000" --collect-all customtkinter --collect-all pygame --hidden-import math --hidden-import os --hidden-import random --hidden-import shutil --hidden-import sys --hidden-import tempfile --hidden-import tkinter --hidden-import tkinter.filedialog --hidden-import tkinter.messagebox --hidden-import wave --hidden-import array --hidden-import datetime --hidden-import pathlib --add-data "app_payload.bin;." --add-data "bundled_music;bundled_music" launcher.py
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -60,5 +68,5 @@ jobs:
           if ($LASTEXITCODE -eq 0) {
             gh release upload v1.0.0 $asset --clobber
           } else {
-            gh release create v1.0.0 $asset --title "Christmas Player 1000 v1.0.0" --notes "Windows kiadás. A publikus repó nem tartalmazza az olvasható Python forráskódot."
+            gh release create v1.0.0 $asset --title "Christmas Player 1000 v1.0.0" --notes "Windows kiadás. Tartalmaz szabadon terjeszthető klasszikus karácsonyi felvételeket és 1000 eredeti jinglet."
           }
