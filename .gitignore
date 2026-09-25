@@ -1,0 +1,12 @@
+*.py
+*.pyw
+*.pyc
+__pycache__/
+build/
+dist/
+*.spec
+christmas_music/
+*.mp3
+*.wav
+*.ogg
+PRIVATE_SOURCE/
